@@ -132,8 +132,8 @@
           :turn :O)))
 
 (defn game-loop [db row col]
-   (println (:table db))
-   (println (get-free-cells (:table db)))
+ ;;  (println (:table db))
+ ;;  (println (get-free-cells (:table db)))
  ;;  (println (if (= (:turn db) :X) ( ai-choose-move (:table db) ) nil))
    (if (nil? (result (:table db)))
      (set-winner (turn-change
