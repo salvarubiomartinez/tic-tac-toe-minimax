@@ -8,9 +8,10 @@
   (assoc db :turn (if (= (:turn db) :X) :O :X)))
 
 (defn play [db row col]
-  (if (= " " (get-in db [:table row col]))
-    (assoc-in db [:table row col] (if (= (:turn db) :X) "X" "O"))
+  (if (nil? (get-in db [:table row col]))
+    (assoc-in db [:table row col] (:turn db))
     db))
+
 (defn get-col [table x]
   [(get-in table [0 x]) (get-in table [1 x]) (get-in table [2 x])])
 
@@ -34,14 +35,14 @@
 (defn get-winner [table]
   (let [col-table (get-col-table table)]
   (cond
-    (rows? table "X") :X
-    (rows? table "O") :O
-    (rows? col-table "X") :X
-    (rows? col-table "O") :O
-    (cross-h? table "X") :X
-    (cross-h? table "O") :O
-    (cross-w? table "X") :X
-    (cross-w? table "O") :O
+    (rows? table :X) :X
+    (rows? table :O) :O
+    (rows? col-table :X) :X
+    (rows? col-table :O) :O
+    (cross-h? table :X) :X
+    (cross-h? table :O) :O
+    (cross-w? table :X) :X
+    (cross-w? table :O) :O
     :else nil)))
 
 (defn set-winner [db]
@@ -50,7 +51,7 @@
 (defn get-free-cells [table]
   (reduce (fn [accx x]
             (reduce (fn [accy y]
-                      (if (= " " (get-in table [x y])) (cons [x y] accy) accy)) accx (range 3)
+                      (if (= nil (get-in table [x y])) (cons [x y] accy) accy)) accx (range 3)
                     )) [] (range 3)))
 
 (defn result [table]
@@ -61,12 +62,18 @@
     :else nil))
 
 (defn fill-table [table position player]
-  (assoc-in table  [(position 0) (position 1)]  (if (= player :X) "X" "O")))
+  (assoc-in table  [(position 0) (position 1)]  player))
 
 (defn minimax [table turn]
   (if (nil? (result table))
     (if (= turn :X)
-      (apply max (map (fn [position] (minimax (fill-table table position :O) :O)) (get-free-cells table)))
+      (let [ratings (map
+                     (fn [position]
+                       (minimax (fill-table table position :O) :O))
+                     (get-free-cells table))]
+        ;; (println "X -> " (apply max ratings))
+        
+        ( apply max ratings ))
       (apply min (map (fn [position] (minimax (fill-table table position :X) :X)) (get-free-cells table))))
     (result table)))
 
@@ -110,24 +117,28 @@
  :re-start
  (fn [db [_ _]]
    (assoc db :table [
-           [" " " " " "]
-           [" " " " " "]
-           [" " " " " "]]
+           [nil nil nil]
+           [nil nil nil]
+           [nil nil nil]]
           :winner nil
           :turn :O)))
 
 (defn game-loop [db row col]
- ;;  (println (:table db))
- ;;  (println (get-free-cells (:table db)))
+   (println (:table db))
+   (println (get-free-cells (:table db)))
  ;;  (println (if (= (:turn db) :X) ( ai-choose-move (:table db) ) nil))
    (if (nil? (result (:table db)))
-     (set-winner (turn-change (if (= (:turn db) :X)
+     (set-winner (turn-change
+                  (if (= (:turn db) :X)
         (ai-move db)
-        (play db row col))))
+        (
+         play db row col))
+                  )
+     )
      db))
 
 (re-frame/reg-event-db
  :play
  (fn [db [_ row col]]
-   (game-loop (game-loop db row col) 0 0)))
-
+   (game-loop
+    (game-loop db row col) 0 0)))

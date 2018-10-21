@@ -6,6 +6,6 @@
    :turn :O
    :winner nil
    :table [
-           [" " " " " "]
-           [" " " " " "]
-           [" " " " " "]]})
+           [nil nil nil]
+           [nil nil nil]
+           [nil nil nil]]})
