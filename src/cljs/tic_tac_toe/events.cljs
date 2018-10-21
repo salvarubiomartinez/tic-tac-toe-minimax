@@ -71,13 +71,21 @@
                      (fn [position]
                        (minimax (fill-table table position :O) :O))
                      (get-free-cells table))]
-        ;; (println "X -> " (apply max ratings))
+       ;; (println "X -> " ratings "->" (apply min ratings))
         
-        ( apply max ratings ))
-      (apply min (map (fn [position] (minimax (fill-table table position :X) :X)) (get-free-cells table))))
-    (result table)))
+        ( apply min ratings ))
+      (let [ratings (map
+                     (fn [position]
+                       (minimax (fill-table table position :X) :X))
+                     (get-free-cells table))]
+      ;;  (println "O -> " ratings "->" (apply max ratings))
+           ( apply max ratings )))
+    (do
+    ;;  (println "result -> " ( result table) ", table -> " table)
+      ( result table ))))
 
 (defn rate-position [table position player]
+  ;;(println "rate position " position)
   (minimax (fill-table table position player) player))
 
 (defn ai-choose-move [table]
@@ -142,3 +150,6 @@
  (fn [db [_ row col]]
    (game-loop
     (game-loop db row col) 0 0)))
+
+
+;; (ai-choose-move [[:X nil :X] [nil :O :O] [nil nil :O]])
