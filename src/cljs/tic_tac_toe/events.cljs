@@ -54,7 +54,7 @@
                       (if (= nil (get-in table [x y])) (cons [x y] accy) accy)) accx (range 3)
                     )) [] (range 3)))
 
-(defn result [table]
+(defn get-result [table]
   (cond
     (= (get-winner table) :X) 1
     (= (get-winner table) :O) -1
@@ -64,41 +64,38 @@
 (defn fill-table [table position player]
   (assoc-in table  [(position 0) (position 1)]  player))
 
-(defn minimax [table turn]
-  (if (nil? (result table))
-    (if (= turn :X)
-      (let [ratings (map
-                     (fn [position]
-                       (minimax (fill-table table position :O) :O))
-                     (get-free-cells table))]
-       ;; (println "X -> " ratings "->" (apply min ratings))
-        
-        ( apply min ratings ))
-      (let [ratings (map
-                     (fn [position]
-                       (minimax (fill-table table position :X) :X))
-                     (get-free-cells table))]
-      ;;  (println "O -> " ratings "->" (apply max ratings))
-           ( apply max ratings )))
-    (do
-    ;;  (println "result -> " ( result table) ", table -> " table)
-      ( result table ))))
+(defn minimax [table next-turn]
+  (let [result (get-result table)]
+    (cond
+      (some? result) (do
+                       ;;  (println "result -> " result ", table -> " table)
+                       result)
+      (= next-turn :X) (let [ratings (map
+                                      (fn [position]
+                                        (minimax (fill-table table position :X) :O))
+                                      (get-free-cells table))]
+                         ;; (println "X -> " ratings "->" (apply max ratings))
+                         (apply max ratings))
+      (= next-turn :O) (let [ratings (map
+                                      (fn [position]
+                                        (minimax (fill-table table position :O) :X))
+                                      (get-free-cells table))]
+                         ;;  (println "O -> " ratings "->" (apply min ratings))
+                         (apply min ratings)))))
 
-(defn rate-position [table position player]
+(defn rate-position [table position player next-turn]
   ;;(println "rate position " position)
-  (minimax (fill-table table position player) player))
+  (minimax (fill-table table position player) next-turn))
 
 (defn ai-choose-move [table]
   (let [free-cells (get-free-cells table)
         ratings (map (fn [position] {
                                      :pos position
-                                     :rating (rate-position table position :X)
+                                     :rating (rate-position table position :X :O)
                                      })
                      free-cells)]
     (println ratings)
-    (:pos ( apply max-key :rating ratings ))
-    )
-  )
+    (:pos ( apply max-key :rating ratings ))))
 
 (defn ai-move [db]
   (if (= (:turn db) :X)
@@ -135,7 +132,7 @@
  ;;  (println (:table db))
  ;;  (println (get-free-cells (:table db)))
  ;;  (println (if (= (:turn db) :X) ( ai-choose-move (:table db) ) nil))
-   (if (nil? (result (:table db)))
+   (if (nil? (get-result (:table db)))
      (set-winner (turn-change
                   (if (= (:turn db) :X)
         (ai-move db)
