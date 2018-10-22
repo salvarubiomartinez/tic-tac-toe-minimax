@@ -3,6 +3,10 @@
    [re-frame.core :as re-frame]
    [tic-tac-toe.db :as db]))
 
+(declare minimax)
+(declare minimax-memo)
+(declare rate-position)
+
 (defn turn-change [db]
   (assoc db
          :turn (if (= (:turn db) :X)
@@ -73,8 +77,7 @@
                         (cons [x y] accy)
                         accy))
                     accx
-                    (range 3)
-                    ))
+                    (range 3)))
           []
           (range 3)))
 
@@ -90,28 +93,26 @@
             [(position 0)
              (position 1)]  player))
 
+(defn get-ratings [table player next-turn func]
+  (let [ratings (map
+                 (fn [position]
+                   (rate-position table position player next-turn))
+                 (get-free-cells table))]
+    ;; (println "X -> " ratings "->" (apply func ratings))
+    (apply func ratings)))
+
 (defn minimax [table next-turn]
   (let [result (get-result table)]
     (cond
-      (some? result) (do
-                       ;;  (println "result -> " result ", table -> " table)
-                       result)
-      (= next-turn :X) (let [ratings (map
-                                      (fn [position]
-                                        (minimax (fill-table table position :X) :O))
-                                      (get-free-cells table))]
-                         ;; (println "X -> " ratings "->" (apply max ratings))
-                         (apply max ratings))
-      (= next-turn :O) (let [ratings (map
-                                      (fn [position]
-                                        (minimax (fill-table table position :O) :X))
-                                      (get-free-cells table))]
-                         ;;  (println "O -> " ratings "->" (apply min ratings))
-                         (apply min ratings)))))
+      (some? result) result
+      (= next-turn :X) (get-ratings table :X :O max)
+      (= next-turn :O) (get-ratings table :O :X min))))
+
+(def minimax-memo (memoize minimax))
 
 (defn rate-position [table position player next-turn]
   ;;(println "rate position " position)
-  (minimax (fill-table table position player) next-turn))
+  (minimax-memo (fill-table table position player) next-turn))
 
 (defn ai-choose-move [table]
   (let [free-cells (get-free-cells table)
