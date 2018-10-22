@@ -5,7 +5,6 @@
    :age 34
    :turn :O
    :winner nil
-   :table [
-           [nil nil nil]
+   :table [[nil nil nil]
            [nil nil nil]
            [nil nil nil]]})
