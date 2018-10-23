@@ -5,13 +5,15 @@
 
 (defn main-panel []
   (let [winner (re-frame/subscribe [::subs/winner])
-        table (re-frame/subscribe [::subs/table])]
+        table (re-frame/subscribe [::subs/table])
+        width (re-frame/subscribe [::subs/width])
+        height (re-frame/subscribe [::subs/height])]
     [:div
      [:table
       [:tbody
-       (doall (for [i (range 3)]
+       (doall (for [i (range @height)]
                 ^{:key (str "tr-" i)}
-                [:tr (doall (for [j (range 3)]
+                [:tr (doall (for [j (range @width)]
                               ^{:key (str "td-" j)}
                               [:td
                                {:on-click #(re-frame/dispatch [:play i j])

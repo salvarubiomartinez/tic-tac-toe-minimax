@@ -21,3 +21,13 @@
  ::winner
  (fn [db]
    (:winner db)))
+
+(re-frame/reg-sub
+ ::width
+ (fn [db]
+   (:width db)))
+
+(re-frame/reg-sub
+ ::height
+ (fn [db]
+   (:height db)))
