@@ -3,6 +3,7 @@
    [re-frame.core :as re-frame]
    [tic-tac-toe.db :as db]))
 
+(def depth 3)
 (declare minimax)
 (declare minimax-memo)
 (declare rate-position)
@@ -106,31 +107,32 @@
         (cons (first s) nil)
         (cons (first s) (take-until pred (rest s)))))))
 
-(defn get-ratings [table player next-turn func cond]
+(defn get-ratings [table player next-turn func cond plays]
     (apply func (take-until cond (lazy-seq (map
                  (fn [position]
-                   (rate-position table position player next-turn))
+                   (rate-position table position player next-turn plays))
                  (get-free-cells table))))))
 
-(defn minimax [table next-turn]
+(defn minimax [table next-turn plays]
   (let [result (get-result table)]
     (cond
       (some? result) result
-      (= next-turn :X) (get-ratings table :X :O max (fn [x] (= x 1)))
-      (= next-turn :O) (get-ratings table :O :X min (fn [x] (= x -1))))))
+      (= plays 0) 0
+      (= next-turn :X) (get-ratings table :X :O max (fn [x] (= x 1)) (- plays 1))
+      (= next-turn :O) (get-ratings table :O :X min (fn [x] (= x -1)) (- plays 1)))))
 
 (def minimax-memo (memoize minimax))
 
-(defn rate-position [table position player next-turn]
+(defn rate-position [table position player next-turn plays]
   ;;(println "rate position " position)
-  (minimax-memo (fill-table table position player) next-turn))
+  (minimax-memo (fill-table table position player) next-turn plays))
 
 (defn ai-choose-move [table]
   (let [free-cells (get-free-cells table)
         ratings (map
                  (fn [position]
                    {:pos position
-                    :rating (rate-position table position :X :O)})
+                    :rating (rate-position table position :X :O depth)})
                  free-cells)]
     (println ratings)
     (:pos (apply max-key :rating ratings))))
