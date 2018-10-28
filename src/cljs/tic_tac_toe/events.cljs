@@ -3,7 +3,7 @@
    [re-frame.core :as re-frame]
    [tic-tac-toe.db :as db]))
 
-(def depth 3)
+(def depth 5)
 (declare minimax)
 (declare minimax-memo)
 (declare rate-position)
@@ -26,7 +26,7 @@
    (get-in table [2 x])])
 
 (defn get-col [table y]
-  (map (fn [x] (get-in table [x y])) (range (count table))))
+  (for [x (range (count table))] (get-in table [x y])))
 
 (defn get-col-table' [table]
   [(get-col table 0)
@@ -34,18 +34,18 @@
    (get-col table 2)])
 
 (defn get-col-table [table]
-  (map (fn [x] (get-col table x)) (range (count table))))
+  (for [x (range (count table))] (get-col table x)))
 
 (defn one-row [row player]
   (every? (fn [x] (= x player)) row))
 
 (defn cross-h? [table player]
-  (let [values (map (fn [x] (get-in table [x x])) (range (count table)))]
+  (let [values (for [x (range (count table))] (get-in table [x x]))]
     (one-row values player)))
 
 (defn cross-w?
   [table player]
-  (let [values (map (fn [x] (get-in table [x (- (count table) x 1)])) (range (count table)))]
+  (let [values (for [x (range (count table))] (get-in table [x (- (count table) x 1)]) )]
     (one-row values player))) 
 
 (defn rows? [table player]
@@ -73,7 +73,7 @@
   (assoc db
          :winner (get-winner (:table db))))
 
-(defn get-free-cells [table]
+(defn get-free-cells' [table]
   (reduce (fn [accx x]
             (reduce (fn [accy y]
                       (if (= nil (get-in table [x y]))
@@ -83,6 +83,12 @@
                     (range (count table))))
           (lazy-seq '())
           (lazy-seq (range (count (table 0))))))
+
+(defn get-free-cells [table]
+  (for [x (range (count table))
+        y (range (count (table 0)))
+        :when (nil? (get-in table [x y]))]
+    [x y]))
 
 (defn get-result [table]
   (cond

@@ -1,7 +1,7 @@
 (ns tic-tac-toe.db)
 
-(def height 5)
-(def width 5)
+(def height 3)
+(def width 3)
 
 (def default-db
   {:name "re-frame"
